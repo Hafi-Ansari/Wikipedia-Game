@@ -1,11 +1,12 @@
-import React from "react"
+import React from "react";
+import Wikipedia from "../components/Wikipedia"
 
 const WikipediaPage = () => {
- return (
-   <div>
-    <h1>Here is the wikipedia page</h1>
-   </div>
- )
-}
+  return (
+    <div>
+      <Wikipedia/>
+    </div>
+  );
+};
 
 export default WikipediaPage

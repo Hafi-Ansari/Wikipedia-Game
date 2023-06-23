@@ -1,37 +1,31 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import socket from '../../socket'
 
 const Wikipedia = () => {
-  const [counter, setCounter] = useState(-1);
-  const [startLink, setStartLink] = useState("");
-  const [endLink, setEndLink] = useState("");
-  const [currentLink, setCurrentLink] = useState(""); 
+  const location = useLocation();
+  const [counter, setCounter] = useState(0);
   const [firstLoadCompleted, setFirstLoadCompleted] = useState(false);
+  const { startLink, endLink, room } = location.state;
+
+  useEffect(() => {
+    socket.on("counterUpdate", (counter) => {
+      console.log("active")
+      setCounter(counter);
+    });
+    return () => {
+      socket.off("counterUpdate");
+    };
+  }, []);
 
   const handleLoad = useCallback(() => {
     if (firstLoadCompleted) {
-      setCounter((prev) => prev + 1);
+      console.log(room)
+      socket.emit("incrementCounter", room);
     } else {
       setFirstLoadCompleted(true);
     }
   }, [firstLoadCompleted]);
-
-  useEffect(() => {
-    const fetchAndSetLinks = async () => {
-      const startLink = await fetchRandomLink();
-      const endLink = await fetchRandomLink();
-
-      setStartLink(startLink);
-      setEndLink(endLink);
-    };
-
-    fetchAndSetLinks();
-  }, []);
-
-  const fetchRandomLink = async () => {
-    const response = await fetch("http://localhost:5000/random");
-    const data = await response.json();
-    return data.url;
-  };
 
   return (
     <div className="h-screen">
@@ -39,17 +33,13 @@ const Wikipedia = () => {
         <div className="flex flex-col bg-gray-200 p-4 rounded-lg border-4 border-black bg-dark-secondary">
           <div className="text-center m-2 border-2 font-bold">
             <p>Link clicks: {counter}</p>
-            <a href="https://en.wikipedia.org/wiki/Submersible">
-              Start Link: {startLink}
-            </a>
+            <a href={startLink}>Start Link: {startLink}</a>
             <br></br>
-            <a href="https://en.wikipedia.org/wiki/Submersible">
-              Goal Link: {endLink}
-            </a>
+            <a href={endLink}>Goal Link: {endLink}</a>
           </div>
           <div className="border-4">
             <iframe
-              title="Submersible"
+              title={startLink}
               src={startLink}
               width="1000px"
               height="400px"

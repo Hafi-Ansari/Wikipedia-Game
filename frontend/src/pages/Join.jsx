@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import io from "socket.io-client";
-
-const socket = io("http://localhost:5000");
+import socket from '../../socket'
 
 const Join = () => {
   const [room, setRoom] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [startLink, setStartLink] = useState("");
+  const [endLink, setEndLink] = useState("");
+  const [readyToNavigate, setReadyToNavigate] = useState(false);
 
-  const navigate = useNavigate(); // useNavigate hook should be called here, inside the component
+  const navigate = useNavigate();
 
   useEffect(() => {
     socket.on("errorMessage", (message) => {
@@ -18,22 +19,37 @@ const Join = () => {
 
     socket.on("successMessage", (message) => {
       setMessage(message);
-      navigate("/wiki");
+      setReadyToNavigate(true);
+    });
+
+    socket.on("room-data", ({ startLink, endLink }) => {
+      setStartLink(startLink);
+      setEndLink(endLink);
+      setReadyToNavigate(true);
     });
 
     return () => {
       socket.off("errorMessage");
       socket.off("successMessage");
+      socket.off("room-data");
     };
-  }, [navigate]); // you should pass navigate as a dependency to useEffect
+  }, [navigate]);
+
+  useEffect(() => {
+    if (startLink && endLink && readyToNavigate) {
+      navigate("/wiki", { state: { room, startLink, endLink } });
+    }
+  }, [startLink, endLink, readyToNavigate, navigate]);
 
   const handleCreate = (event) => {
     event.preventDefault();
+    setReadyToNavigate(false);
     socket.emit("createRoom", { room, password });
   };
 
   const handleJoin = (event) => {
     event.preventDefault();
+    setReadyToNavigate(false);
     socket.emit("joinRoom", { room, password });
   };
 

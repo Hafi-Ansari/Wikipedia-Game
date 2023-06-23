@@ -1,18 +1,13 @@
 const express = require("express");
 const app = express();
-const cors = require('cors');
+const cors = require("cors");
 
 app.use(cors());
 
-app.get('/random', async (req, res) => {
-    try {
-      const response = await fetch('https://en.wikipedia.org/wiki/Special:Random');
-      res.json({ url: response.url });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to fetch random article' });
-    }
-});
+const fetchRandomLink = async () => {
+  const response = await fetch("https://en.wikipedia.org/wiki/Special:Random");
+  return response.url;
+};
 
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, {
@@ -22,22 +17,44 @@ const io = require("socket.io")(server, {
   },
 });
 
-let rooms = {};
+let rooms = {}; // { room1: { password: 'password1', startLink: 'startLink1', endLink: 'endLink1' }, ... }
 
 io.on("connection", (socket) => {
   console.log("New WebSocket connection");
 
-  socket.on("createRoom", ({ room, password }) => {
-    rooms[room] = password;
-    console.log(`Room ${room} created with password ${password}`);
+  socket.on("createRoom", async ({ room, password }) => {
+    const startLink = await fetchRandomLink();
+    const endLink = await fetchRandomLink();
+    console.log(startLink);
+    console.log(endLink);
+    let counter = 0 
+    rooms[room] = { password, startLink, endLink, counter };
+
+    console.log(`Room ${room} created with password ${password} with a counter value of ${counter}`);
+    socket.join(room);
+    socket.emit("room-data", { startLink, endLink });
   });
 
   socket.on("joinRoom", ({ room, password }) => {
-    if (rooms[room] === password) {
+    const roomData = rooms[room];
+    if (roomData && roomData.password === password) {
       socket.join(room);
+      console.log(`joined room ${room} successfully`)
       socket.emit("successMessage", `Successfully joined ${room}`);
+      socket.emit("room-data", {
+        startLink: roomData.startLink,
+        endLink: roomData.endLink,
+      });
     } else {
       socket.emit("errorMessage", "Incorrect room password");
+    }
+  });
+
+  socket.on("incrementCounter", (room) => {
+    if (rooms[room]) {
+      rooms[room].counter++;
+      console.log(rooms[room]);
+      io.in(room).emit("counterUpdate", rooms[room].counter);
     }
   });
 });

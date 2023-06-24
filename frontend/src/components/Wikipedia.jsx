@@ -10,7 +10,6 @@ const Wikipedia = () => {
 
   useEffect(() => {
     socket.on("counterUpdate", (counter) => {
-      console.log("active");
       setCounter(counter);
     });
     return () => {
@@ -20,7 +19,6 @@ const Wikipedia = () => {
 
   useEffect(() => {
     socket.on("room-data", (data) => {
-      console.log("Received room data", data);
       setCounter(data.counter);
     });
     return () => {
@@ -30,7 +28,6 @@ const Wikipedia = () => {
 
   const handleLoad = useCallback(() => {
     if (firstLoadCompleted) {
-      console.log(room);
       socket.emit("incrementCounter", room);
     } else {
       setFirstLoadCompleted(true);
@@ -45,10 +42,19 @@ const Wikipedia = () => {
     <div className="h-screen">
       <div className="flex justify-center items-center h-full bg-dark-primary">
         <div className="flex flex-col bg-gray-200 p-4 rounded-lg border-4 border-black bg-dark-secondary">
-        <button className="border-4 w-21" onClick={resetCounter}>Reset Counter</button>
-          <div className="text-center m-2 border-2 font-bold">
-            <p>Link clicks: {counter}</p>
-            <a href={startLink}>Start Link: {startLink}</a>
+          <div className="inline-flex justify-center font-bold">
+            <button
+              className="border-4 w-21 mr-4  rounded-lg p-2 bg-dark-ternary hover:bg-accent-1"
+              onClick={resetCounter}
+            >
+              Reset Count
+            </button>
+            <button className="border-4 w-21 rounded-lg p-2 bg-dark-ternary cursor-not-allowed">
+              Link Clicks: {counter}
+            </button>
+          </div>
+          <div className="text-center m-2 border-2 font-bold rounded-lg bg-dark-ternary">
+            <a href={startLink}>Start Link: {startLink} </a>
             <br></br>
             <a href={endLink}>Goal Link: {endLink}</a>
           </div>

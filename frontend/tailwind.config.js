@@ -11,6 +11,7 @@ export default {
     "dark-primary": "#282a36", 
     "dark-secondary": "#A65D5D",
     "dark-ternary": "#7E88BF",
+    'accent-1': '#BDC4E4'
     }, 
     extend: {},
   },

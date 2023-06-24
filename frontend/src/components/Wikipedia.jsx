@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import socket from '../../socket'
+import socket from "../../socket";
 
 const Wikipedia = () => {
   const location = useLocation();
@@ -10,7 +10,7 @@ const Wikipedia = () => {
 
   useEffect(() => {
     socket.on("counterUpdate", (counter) => {
-      console.log("active")
+      console.log("active");
       setCounter(counter);
     });
     return () => {
@@ -18,19 +18,34 @@ const Wikipedia = () => {
     };
   }, []);
 
+  useEffect(() => {
+    socket.on("room-data", (data) => {
+      console.log("Received room data", data);
+      setCounter(data.counter);
+    });
+    return () => {
+      socket.off("room-data");
+    };
+  }, []);
+
   const handleLoad = useCallback(() => {
     if (firstLoadCompleted) {
-      console.log(room)
+      console.log(room);
       socket.emit("incrementCounter", room);
     } else {
       setFirstLoadCompleted(true);
     }
   }, [firstLoadCompleted]);
 
+  const resetCounter = () => {
+    socket.emit("reset", room);
+  };
+
   return (
     <div className="h-screen">
       <div className="flex justify-center items-center h-full bg-dark-primary">
         <div className="flex flex-col bg-gray-200 p-4 rounded-lg border-4 border-black bg-dark-secondary">
+        <button className="border-4 w-21" onClick={resetCounter}>Reset Counter</button>
           <div className="text-center m-2 border-2 font-bold">
             <p>Link clicks: {counter}</p>
             <a href={startLink}>Start Link: {startLink}</a>
